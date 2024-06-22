@@ -7,7 +7,20 @@ const redis = require("redis");
 let client;
 
 (async () => {
-  client = redis.createClient();
+  client = redis.createClient({
+    socket: {
+      reconnectStrategy: function (retries) {
+        if (retries > 20) {
+          console.log(
+            "Too many attempts to reconnect. Redis connection was terminated"
+          );
+          return new Error("too many retries");
+        } else {
+          return retries * 500;
+        }
+      },
+    },
+  });
   client.on("error", (err) => console.log("Redis Client Error", err));
   await client.connect();
 })();
